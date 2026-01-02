@@ -8,6 +8,7 @@ import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 // Route Imports
 import authRoutes from './routes/authRoutes.js';
 import packageRoutes from './routes/packageRoutes.js';
+import shipStationRoutes from './routes/shipStationRoutes.js';
 
 dotenv.config();
 const port = process.env.PORT || 5000;
@@ -19,8 +20,8 @@ const app = express();
 
 // Update allowed origins
 const allowedOrigins = [
-  'http://localhost:5173', // Local development
-  'https://your-frontend-domain.vercel.app' // Your deployed Frontend URL
+  'http://localhost:5173', 
+  'https://skyrush-two.vercel.app' // <--- Your actual frontend
 ];
 
 // Middleware
@@ -47,6 +48,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/packages', packageRoutes);
+app.use('/api/shipstation', shipStationRoutes);
 
 // Error Handling Middleware (Must be after routes)
 app.use(notFound);
