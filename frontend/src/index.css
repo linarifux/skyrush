@@ -1,1 +1,67 @@
 @import "tailwindcss";
+
+/* --- Custom Scrollbar (Webkit browsers like Chrome/Safari) --- */
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #0f172a; /* slate-900 */
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #334155; /* slate-700 */
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #475569; /* slate-600 */
+  }
+
+  /* Hide scrollbar for 'scrollbar-hide' utility */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* --- Global Styles --- */
+body {
+  @apply bg-slate-950 text-white antialiased;
+}
+
+/* Custom Text Selection Color */
+::selection {
+  @apply bg-blue-500/30 text-blue-200;
+}
+
+/* --- Animation Utilities --- */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* --- Phone Input Overrides (If needed globally) --- */
+.react-international-phone-country-selector-dropdown {
+  @apply !bg-slate-900 !text-white !border-slate-700;
+}

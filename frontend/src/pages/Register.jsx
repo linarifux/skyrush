@@ -1,19 +1,40 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useDispatch, useSelector } from 'react-redux';
+import { useRegisterMutation } from '../redux/slices/usersApiSlice';
+import { setCredentials } from '../redux/slices/authSlice';
 import { PhoneInput } from 'react-international-phone';
-import 'react-international-phone/style.css'; // Minimal styles for the flag dropdown
+import 'react-international-phone/style.css'; 
+import ReCAPTCHA from "react-google-recaptcha";
+import toast from 'react-hot-toast'; 
 import { 
-  User, Mail, Lock, MapPin, Briefcase, Truck, ArrowRight, ArrowLeft, Package
+  User, Mail, Lock, MapPin, Briefcase, Truck, ArrowRight, ArrowLeft, Package, Loader2
 } from 'lucide-react';
 
 const Register = () => {
   const [step, setStep] = useState(1);
+  const [captchaValue, setCaptchaValue] = useState(null);
+  
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '', password: '',
     companyName: '', shippingOption: 'Standard',
     street: '', streetLine2: '', city: '', state: '', zipCode: '', addressCountry: 'United States'
   });
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // 1. Redux Hooks
+  const [register, { isLoading }] = useRegisterMutation();
+  const { userInfo } = useSelector((state) => state.auth);
+
+  // 2. Redirect if already logged in
+  useEffect(() => {
+    if (userInfo) {
+      navigate('/dashboard');
+    }
+  }, [navigate, userInfo]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,12 +44,52 @@ const Register = () => {
     setFormData({ ...formData, phone });
   };
 
-  const nextStep = () => setStep(2);
+  const handleCaptchaChange = (value) => {
+    setCaptchaValue(value);
+    if(value) toast.dismiss(); 
+  };
+
+  const nextStep = () => {
+    const { firstName, lastName, email, phone, password } = formData;
+
+    if (!firstName) return toast.error("Please enter your first name");
+    if (!lastName) return toast.error("Please enter your last name");
+    if (!email) return toast.error("Email address is required");
+    if (!phone || phone.length < 6) return toast.error("Please enter a valid phone number");
+    if (!password) return toast.error("Password is required");
+    
+    setStep(2);
+  };
+
   const prevStep = () => setStep(1);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Final Data:', formData);
+    
+    // Validation
+    if (!captchaValue) {
+        toast.error("Please complete the captcha verification");
+        return;
+    }
+    
+    const { street, city, state, zipCode } = formData;
+    if (!street || !city || !state || !zipCode) {
+        toast.error("Please complete your shipping address");
+        return;
+    }
+
+    try {
+      // 3. Call Backend API
+      const res = await register(formData).unwrap();
+      
+      // 4. Save to Redux & Redirect
+      dispatch(setCredentials(res));
+      toast.success("Account created successfully!");
+      navigate('/dashboard');
+
+    } catch (err) {
+      toast.error(err?.data?.message || err.error);
+    }
   };
 
   const slideVariants = {
@@ -40,7 +101,7 @@ const Register = () => {
   return (
     <div className="min-h-screen flex text-white relative bg-slate-950 overflow-hidden">
       
-      {/* --- Left Side: Branding --- */}
+      {/* --- Left Side: Branding (Unchanged) --- */}
       <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-12 bg-slate-900 border-r border-white/5 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-10" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/20 rounded-full blur-[120px]" />
@@ -55,7 +116,7 @@ const Register = () => {
         <div className="relative z-10 space-y-6 max-w-lg">
           <h1 className="text-5xl font-bold leading-tight">
             Shop Globally, <br />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-500">Ship Locally.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Ship Locally.</span>
           </h1>
           <p className="text-lg text-gray-400">
             Create your account today and get instant access to your own US shipping address. We handle the logistics, you enjoy the shopping.
@@ -82,7 +143,7 @@ const Register = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="relative overflow-hidden min-h-120">
+          <form onSubmit={handleSubmit} className="relative overflow-hidden min-h-[480px]">
             <AnimatePresence mode='wait' custom={step}>
               
               {/* === STEP 1: PERSONAL INFO === */}
@@ -104,15 +165,12 @@ const Register = () => {
                   
                   <InputField icon={Mail} type="email" name="email" placeholder="Email Address" onChange={handleChange} value={formData.email} />
                   
-                  {/* --- NEW Phone Input Component --- */}
                   <div className="w-full">
                     <PhoneInput
                       defaultCountry="bd"
                       value={formData.phone}
                       onChange={handlePhoneChange}
-                      // These classes apply directly to the input field
                       inputClassName="!w-full !bg-slate-900 !border !border-white/10 !text-white !h-[54px] !text-sm !rounded-r-xl focus:!ring-2 focus:!ring-blue-600 focus:!border-transparent !transition-all placeholder:!text-gray-600"
-                      // These classes apply to the flag dropdown button
                       countrySelectorStyleProps={{
                         buttonClassName: "!bg-slate-900 !border-white/10 !rounded-l-xl !h-[54px] hover:!bg-slate-800 !px-3",
                         dropdownStyleProps: {
@@ -120,10 +178,7 @@ const Register = () => {
                             listItemClassName: "hover:!bg-slate-800 !text-gray-200"
                         }
                       }}
-                      inputStyle={{
-                         width: '100%',
-                         backgroundColor: 'transparent' // Fallback
-                      }}
+                      inputStyle={{ width: '100%', backgroundColor: 'transparent' }}
                     />
                   </div>
 
@@ -135,7 +190,7 @@ const Register = () => {
                 </motion.div>
               )}
 
-              {/* === STEP 2: SHIPPING INFO === */}
+              {/* === STEP 2: SHIPPING INFO + CAPTCHA === */}
               {step === 2 && (
                 <motion.div
                   key="step2"
@@ -177,12 +232,32 @@ const Register = () => {
                      </select>
                   </div>
 
-                  <div className="flex gap-3 mt-6">
+                  {/* Captcha */}
+                  <div className="flex justify-center my-2 transform scale-90 origin-center">
+                      <ReCAPTCHA
+                        sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" 
+                        onChange={handleCaptchaChange}
+                        theme="dark"
+                      />
+                  </div>
+
+                  <div className="flex gap-3 mt-4">
                     <button type="button" onClick={prevStep} className="w-1/3 bg-slate-800 hover:bg-slate-700 text-gray-300 font-semibold py-4 rounded-xl transition-all flex items-center justify-center gap-2">
                       <ArrowLeft className="w-5 h-5" /> Back
                     </button>
-                    <button type="submit" className="w-2/3 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2">
-                      Create Account
+                    
+                    <button 
+                       type="submit" 
+                       disabled={isLoading}
+                       className="w-2/3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" /> Creating Account...
+                        </>
+                      ) : (
+                        "Create Account"
+                      )}
                     </button>
                   </div>
                 </motion.div>

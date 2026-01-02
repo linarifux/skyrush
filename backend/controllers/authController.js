@@ -65,10 +65,17 @@ const loginUser = asyncHandler(async (req, res) => {
 
   if (user && (await bcrypt.compare(password, user.password))) {
     generateToken(res, user._id);
+    
+    // UPDATED: Return all necessary fields for the UI
     res.status(200).json({
       _id: user._id,
       name: `${user.firstName} ${user.lastName}`,
       email: user.email,
+      phone: user.phone,
+      country: user.country,
+      companyName: user.companyName,
+      shippingOption: user.shippingOption,
+      address: user.address, // <--- Critical for the "My Address" page
     });
   } else {
     res.status(401);
@@ -96,7 +103,7 @@ const generateToken = (res, userId) => {
   res.cookie('token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax', // Changed from 'strict' for better local dev compatibility
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };

@@ -1,16 +1,38 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux'; // 1. Redux Hooks
+import { useLogoutMutation } from '../../redux/slices/usersApiSlice';
+import { logout } from '../../redux/slices/authSlice';
+import toast from 'react-hot-toast';
 import { Menu, X, Package, LogOut } from 'lucide-react';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   
-  // Placeholder auth state (We will replace this with Redux later)
-  const isAuthenticated = false; 
+  // 2. Get Real Auth State
+  const { userInfo } = useSelector((state) => state.auth);
+  
+  // 3. Logout Logic
+  const [logoutApiCall] = useLogoutMutation();
+
+  const handleLogout = async () => {
+    try {
+      await logoutApiCall().unwrap();
+      dispatch(logout());
+      navigate('/login');
+      toast.success("Logged out successfully");
+      setIsOpen(false); // Close mobile menu if open
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const navLinks = [
     { name: 'Home', path: '/' },
+    { name: 'Ship Now', path: '/ship' },
     { name: 'Services', path: '/services' },
     { name: 'How it Works', path: '/how-it-works' },
     { name: 'Pricing', path: '/pricing' },
@@ -25,7 +47,7 @@ const Navbar = () => {
           
           {/* --- Logo Section --- */}
           <Link to="/" className="flex items-center space-x-2 rtl:space-x-reverse group">
-            <div className="bg-gradient-to-tr from-blue-500 to-purple-600 p-2 rounded-lg group-hover:shadow-lg group-hover:shadow-blue-500/40 transition-all duration-300">
+            <div className="bg-linear-to-tr from-blue-500 to-purple-600 p-2 rounded-lg group-hover:shadow-lg group-hover:shadow-blue-500/40 transition-all duration-300">
                <Package className="text-white h-6 w-6" />
             </div>
             <span className="self-center text-2xl font-bold whitespace-nowrap text-white tracking-wide">
@@ -65,24 +87,31 @@ const Navbar = () => {
 
           {/* --- Auth Buttons (Desktop) --- */}
           <div className="hidden md:flex space-x-4 items-center">
-            {isAuthenticated ? (
+            {userInfo ? (
+              // Logged In View
               <div className="flex items-center space-x-6">
                 <Link to="/dashboard">
-                    <span className="text-gray-300 hover:text-white cursor-pointer transition font-medium">Dashboard</span>
+                    <span className="text-gray-300 hover:text-white cursor-pointer transition font-medium">
+                      Dashboard
+                    </span>
                 </Link>
-                <button className="flex items-center text-red-400 hover:text-red-300 transition text-sm font-medium">
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center text-red-400 hover:text-red-300 transition text-sm font-medium"
+                >
                   <LogOut className="w-4 h-4 mr-1.5" />
                   Logout
                 </button>
               </div>
             ) : (
+              // Guest View
               <>
                 <Link to="/login" className="text-gray-300 hover:text-white transition font-medium text-sm">
                   Log In
                 </Link>
                 <Link
                   to="/register"
-                  className="text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40"
+                  className="text-white bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40"
                 >
                   Sign Up
                 </Link>
@@ -114,10 +143,11 @@ const Navbar = () => {
             
             {/* Mobile Auth Divider */}
             <div className="border-t border-white/10 my-2 pt-4 flex flex-col gap-3">
-                {isAuthenticated ? (
+                {userInfo ? (
                      <>
+                     <div className="px-4 text-sm text-gray-500 mb-2">Signed in as {userInfo.name}</div>
                      <Link to="/dashboard" onClick={() => setIsOpen(false)} className="block py-2 px-4 text-gray-300 hover:bg-white/5 rounded-lg">Dashboard</Link>
-                     <button className="w-full text-left py-2 px-4 text-red-400 hover:bg-white/5 rounded-lg">Logout</button>
+                     <button onClick={handleLogout} className="w-full text-left py-2 px-4 text-red-400 hover:bg-white/5 rounded-lg">Logout</button>
                      </>
                 ) : (
                     <>

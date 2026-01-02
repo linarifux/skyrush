@@ -16,7 +16,7 @@ const Footer = () => {
           {/* 1. Brand Info */}
           <div className="flex flex-col items-center md:items-start space-y-6">
             <Link to="/" className="flex items-center space-x-2 group">
-              <div className="bg-gradient-to-tr from-blue-600 to-purple-600 p-2 rounded-xl group-hover:shadow-lg group-hover:shadow-blue-500/20 transition-all duration-300">
+              <div className="bg-linear-to-tr from-blue-600 to-purple-600 p-2 rounded-xl group-hover:shadow-lg group-hover:shadow-blue-500/20 transition-all duration-300">
                 <Package className="text-white h-5 w-5" />
               </div>
               <span className="text-xl font-bold text-white tracking-tight">SkyRush</span>

@@ -1,7 +1,6 @@
 import Hero from '../components/home/Hero';
 import Services from '../components/home/Services';
 import AboutSection from '../components/home/AboutSection';
-import Footer from '../components/shared/Footer';
 
 const Home = () => {
   return (
@@ -9,7 +8,6 @@ const Home = () => {
       <Hero />
       <Services />
       <AboutSection />
-      <Footer />
     </div>
   );
 };

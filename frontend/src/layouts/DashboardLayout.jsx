@@ -1,5 +1,9 @@
 import { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux'; // 1. Import Hooks
+import { useLogoutMutation } from '../redux/slices/usersApiSlice';
+import { logout } from '../redux/slices/authSlice';
+import toast from 'react-hot-toast';
 import { 
   LayoutDashboard, Package, MapPin, Settings, LogOut, Menu, X, Bell, User
 } from 'lucide-react';
@@ -7,6 +11,25 @@ import {
 const DashboardLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // 2. Get User Info from Redux
+  const { userInfo } = useSelector((state) => state.auth);
+  
+  // 3. Logout Mutation
+  const [logoutApiCall] = useLogoutMutation();
+
+  const handleLogout = async () => {
+    try {
+      await logoutApiCall().unwrap();
+      dispatch(logout());
+      navigate('/login');
+      toast.success("Logged out successfully");
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
@@ -63,7 +86,10 @@ const DashboardLayout = () => {
 
         {/* Bottom Actions */}
         <div className="absolute bottom-0 w-full p-4 border-t border-white/5">
-          <button className="flex items-center space-x-3 px-4 py-3 w-full rounded-xl text-red-400 hover:bg-red-500/10 transition-colors">
+          <button 
+             onClick={handleLogout} // 4. Attach Logout Handler
+             className="flex items-center space-x-3 px-4 py-3 w-full rounded-xl text-red-400 hover:bg-red-500/10 transition-colors"
+          >
             <LogOut size={20} />
             <span className="font-medium">Sign Out</span>
           </button>
@@ -90,15 +116,20 @@ const DashboardLayout = () => {
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-slate-900"></span>
             </button>
 
-            {/* User Profile */}
+            {/* User Profile - 5. Dynamic Data */}
             <div className="flex items-center space-x-3 pl-6 border-l border-white/10">
               <div className="text-right hidden md:block">
-                <p className="text-sm font-medium text-white">John Doe</p>
+                <p className="text-sm font-medium text-white">
+                    {userInfo ? userInfo.name : 'Guest'}
+                </p>
                 <p className="text-xs text-gray-500">Member</p>
               </div>
               <div className="w-10 h-10 rounded-full bg-linear-to-tr from-blue-500 to-purple-500 p-0.5">
-                <div className="w-full h-full rounded-full bg-slate-800 flex items-center justify-center">
-                   <User size={20} className="text-white" />
+                <div className="w-full h-full rounded-full bg-slate-800 flex items-center justify-center overflow-hidden">
+                   {/* Fallback to initial if no image */}
+                   <span className="font-bold text-white text-sm">
+                      {userInfo ? userInfo.name.charAt(0) : <User size={20} />}
+                   </span>
                 </div>
               </div>
             </div>
