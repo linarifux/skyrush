@@ -65,3 +65,7 @@ body {
 .react-international-phone-country-selector-dropdown {
   @apply !bg-slate-900 !text-white !border-slate-700;
 }
+
+button{
+  cursor: pointer;
+}
