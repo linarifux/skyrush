@@ -20,8 +20,9 @@ const app = express();
 
 // Update allowed origins
 const allowedOrigins = [
-  'http://localhost:5173', 
-  'https://skyrush-two.vercel.app' // <--- Your actual frontend
+  'http://localhost:5173',                  // Local Development
+  'https://skyrush-package.netlify.app',    // <--- ADD THIS (Your Netlify Frontend)
+  'https://skyrush-two.vercel.app'          // (Optional: Your Backend URL)
 ];
 
 // Middleware
