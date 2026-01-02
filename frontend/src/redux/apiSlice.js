@@ -1,15 +1,15 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 const baseQuery = fetchBaseQuery({ 
-  baseUrl: 'http://localhost:5000', // Your Backend URL
+  // Use the env variable, or fallback to localhost for development if env is missing
+  baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000', 
   prepareHeaders: (headers) => {
-    // If we have a token (though we are using cookies, this is good practice)
     return headers;
   },
 });
 
 export const apiSlice = createApi({
   baseQuery,
-  tagTypes: ['User'], // Caching tags
-  endpoints: (builder) => ({}), // We inject endpoints later
+  tagTypes: ['User'], 
+  endpoints: (builder) => ({}), 
 });

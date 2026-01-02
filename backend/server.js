@@ -17,13 +17,27 @@ connectDB(); // You need to export this function from config/db.js
 
 const app = express();
 
+// Update allowed origins
+const allowedOrigins = [
+  'http://localhost:5173', // Local development
+  'https://your-frontend-domain.vercel.app' // Your deployed Frontend URL
+];
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true // Crucial if you are using cookies
 }));
 
 // Routes
